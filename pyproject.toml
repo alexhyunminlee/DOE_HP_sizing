@@ -21,5 +21,6 @@ extension = { qmd = "markdown" }
 
 [dependency-groups]
 dev = [
+    "prek>=0.3.2",
     "ruff>=0.16.10",
 ]

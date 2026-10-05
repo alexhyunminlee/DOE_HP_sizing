@@ -15,7 +15,7 @@ just setup
 source .venv/bin/activate
 ```
 
-`just setup` creates `.venv` and installs the Python packages the notebooks need. Activate that environment when you want to use Python directly. Rendering does not require the activation step; Quarto picks up `.venv` on its own.
+`just setup` creates `.venv`, installs the Python packages the notebooks need, and installs the pre-commit hooks. Activate that environment when you want to use Python directly. Rendering does not require the activation step; Quarto picks up `.venv` on its own.
 
 ## Notebooks
 
@@ -35,13 +35,15 @@ Add another analysis by creating a `.qmd` file under `notebooks/` and running `j
 just render-one notebooks/eda.qmd
 ```
 
-`just preview` opens a live preview. `just clean` deletes `output/` and Quarto's cache. `just check` runs Ruff on the notebooks (lint and format check) and checks Justfile formatting. It only reports problems.
+`just preview` opens a live preview. `just clean` deletes `output/` and Quarto's cache.
+
+`just check` checks that `uv.lock` matches `pyproject.toml`, then runs the pre-commit hooks (`uv run prek run -a`). Those hooks fix formatting and lint issues in place. If a hook changes a file, the command fails; run it again to confirm everything is clean. The same hooks run on `git commit` after `just setup`.
 
 ## Layout
 
-| Path | Purpose |
-| --- | --- |
-| `data/` | CSV inputs. Not generated. |
-| `notebooks/` | Quarto source files. |
-| `output/` | Rendered HTML. Gitignored. |
-| `Justfile` | `setup`, `render`, `preview`, `check`, and `clean`. |
+| Path         | Purpose                                             |
+| ------------ | --------------------------------------------------- |
+| `data/`      | CSV inputs. Not generated.                          |
+| `notebooks/` | Quarto source files.                                |
+| `output/`    | Rendered HTML. Gitignored.                          |
+| `Justfile`   | `setup`, `render`, `preview`, `check`, and `clean`. |

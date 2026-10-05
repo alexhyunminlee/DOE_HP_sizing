@@ -2,9 +2,10 @@
 default:
     @just --list
 
-# Create .venv and install Python packages
+# Create .venv, install Python packages, and install pre-commit hooks
 setup:
     uv sync
+    uv run prek install --install-hooks
 
 # Render every notebook to HTML under output/
 render: setup
@@ -18,14 +19,13 @@ render-one file: setup
 preview: setup
     quarto preview
 
-# Lint and check formatting. Does not modify files.
+# Run code quality tools
 check: setup
-    uv run ruff check .
-    uv run python scripts/lint_notebooks.py
-    uv run ruff format --check .
-    # `just --fmt` is still marked unstable; --unstable enables only this invocation.
-    just --unstable --fmt --check
+    echo "🚀 Checking lock file consistency with 'pyproject.toml'"
+    uv lock --locked
+    echo "🚀 Linting and formatting code"
+    uv run prek run -a
 
-# Delete rendered HTML and Quarto's execution cache
+# Delete rendered HTML, Quarto's execution cache, and Ruff's cache
 clean:
-    rm -rf output .quarto
+    rm -rf output .quarto .ruff_cache
