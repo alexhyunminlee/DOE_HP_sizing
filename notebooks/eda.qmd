@@ -19,10 +19,7 @@ from IPython.display import Markdown, display
 
 # Paths are relative to the project root (execute-dir in _quarto.yml).
 data_dir = Path("data")
-frames = {
-    path.name: pd.read_csv(path)
-    for path in sorted(data_dir.glob("*.csv"))
-}
+frames = {path.name: pd.read_csv(path) for path in sorted(data_dir.glob("*.csv"))}
 
 if not frames:
     print("No CSV files in data/ yet.")

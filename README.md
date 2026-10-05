@@ -35,7 +35,7 @@ Add another analysis by creating a `.qmd` file under `notebooks/` and running `j
 just render-one notebooks/eda.qmd
 ```
 
-`just preview` opens a live preview. `just clean` deletes `output/` and Quarto's cache.
+`just preview` opens a live preview. `just clean` deletes `output/` and Quarto's cache. `just check` runs Ruff on the notebooks (lint and format check) and checks Justfile formatting. It only reports problems.
 
 ## Layout
 
@@ -44,4 +44,4 @@ just render-one notebooks/eda.qmd
 | `data/` | CSV inputs. Not generated. |
 | `notebooks/` | Quarto source files. |
 | `output/` | Rendered HTML. Gitignored. |
-| `Justfile` | `setup`, `render`, `preview`, and `clean`. |
+| `Justfile` | `setup`, `render`, `preview`, `check`, and `clean`. |

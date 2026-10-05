@@ -12,3 +12,14 @@ dependencies = [
 
 [tool.uv]
 package = false
+
+[tool.ruff]
+target-version = "py312"
+line-length = 88
+# So `ruff format` includes Python cells in .qmd files.
+extension = { qmd = "markdown" }
+
+[dependency-groups]
+dev = [
+    "ruff>=0.16.10",
+]
