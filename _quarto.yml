@@ -1,0 +1,8 @@
+project:
+  type: default
+  output-dir: output
+  execute-dir: project
+
+execute:
+  # Re-run on every project render so new or updated CSVs show up.
+  freeze: false

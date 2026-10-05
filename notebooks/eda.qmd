@@ -1,0 +1,85 @@
+---
+title: "Exploratory data analysis"
+format:
+  html:
+    toc: true
+    toc-depth: 2
+    code-fold: show
+    embed-resources: true
+---
+
+Summaries of every CSV in `data/`. Add files there, then run `just render`.
+
+```{python}
+from pathlib import Path
+
+import matplotlib.pyplot as plt
+import pandas as pd
+from IPython.display import Markdown, display
+
+# Paths are relative to the project root (execute-dir in _quarto.yml).
+data_dir = Path("data")
+frames = {
+    path.name: pd.read_csv(path)
+    for path in sorted(data_dir.glob("*.csv"))
+}
+
+if not frames:
+    print("No CSV files in data/ yet.")
+else:
+    print(f"Found {len(frames)} CSV file(s):")
+    for name in frames:
+        print(f"- {name}")
+```
+
+```{python}
+for name, frame in frames.items():
+    display(Markdown(f"## {name}"))
+    display(Markdown(f"{len(frame):,} rows, {frame.shape[1]} columns"))
+
+    missing = frame.isna().sum()
+    missing = missing[missing > 0].sort_values(ascending=False)
+
+    display(Markdown("### Preview"))
+    display(frame.head())
+
+    display(Markdown("### Column types"))
+    display(frame.dtypes.rename("dtype").to_frame())
+
+    display(Markdown("### Missing values"))
+    if missing.empty:
+        print("No missing values.")
+    else:
+        display(missing.rename("missing").to_frame())
+
+    numeric = frame.select_dtypes(include="number")
+    if not numeric.empty:
+        display(Markdown("### Numeric summary"))
+        display(numeric.describe().T)
+
+    low_cardinality = [
+        column
+        for column in frame.select_dtypes(exclude="number").columns
+        if frame[column].nunique(dropna=True) <= 12
+    ]
+    if low_cardinality:
+        display(Markdown("### Category counts"))
+        for column in low_cardinality:
+            display(Markdown(f"**{column}**"))
+            display(frame[column].value_counts(dropna=False).rename("count").to_frame())
+
+    plot_columns = list(numeric.columns[:6])
+    if plot_columns:
+        fig, axes = plt.subplots(
+            1,
+            len(plot_columns),
+            figsize=(3.5 * len(plot_columns), 3),
+            squeeze=False,
+        )
+        for axis, column in zip(axes[0], plot_columns):
+            numeric[column].dropna().hist(ax=axis, bins=20, color="#3d5a40")
+            axis.set_title(column)
+        fig.suptitle(name)
+        fig.tight_layout()
+        plt.show()
+```
