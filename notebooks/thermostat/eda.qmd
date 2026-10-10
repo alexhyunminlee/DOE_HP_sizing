@@ -1,0 +1,176 @@
+---
+title: "Thermostat exploratory analysis"
+date: today
+number-sections: true
+format:
+  pdf:
+    pdf-engine: pdflatex
+    documentclass: article
+    classoption: [11pt]
+    fontfamily: mathptmx
+    geometry: margin=1in
+    linestretch: 1.15
+    colorlinks: true
+execute:
+  echo: false
+  warning: false
+---
+
+Temperatures are converted from Fahrenheit to Celsius, and the heat-stage runtime is the fraction of each 5-minute interval the stage was on. Set `HOUSE_ID` and render with `just thermostat-eda <house_id>`. Each thermostat CSV in that house is plotted on its own page. The window is the first four days in which every reading is present. When the file has no such stretch, the figure falls back to an earlier fixed segment, and it never covers more than four days. Shaded regions mark periods when the thermostat schedule was in *Sleep* mode.
+
+````{python}
+#| output: asis
+
+import os
+import sys
+from pathlib import Path
+
+import matplotlib.dates as mdates
+import matplotlib.pyplot as plt
+import pandas as pd
+from matplotlib.patches import Patch
+
+# Quarto may run this notebook from its own folder, so locate the repo root
+# before importing project code.
+starts = [Path.cwd()]
+if project_dir := os.environ.get("QUARTO_PROJECT_DIR"):
+    starts.append(Path(project_dir))
+for start in starts:
+    for candidate in [start, *start.parents]:
+        if (candidate / "pyproject.toml").is_file():
+            sys.path.insert(0, str(candidate))
+            break
+    else:
+        continue
+    break
+
+from utils.utils import (
+    HIGHLIGHT_COLOR,
+    INDOOR_TEMP_COLOR,
+    SETPOINT_COLOR,
+    apply_journal_style,
+    celsius_to_fahrenheit,
+    contiguous_blocks,
+    fahrenheit_to_celsius,
+    first_complete_window,
+    load_thermostat,
+    thermostat_csv_files,
+    thermostat_dir,
+)
+
+apply_journal_style()
+
+house_id = os.environ.get("HOUSE_ID", "").strip()
+if not house_id.isdigit():
+    message = "Set HOUSE_ID to a house number. Example: just thermostat-eda 52"
+    raise SystemExit(message)
+
+files = thermostat_csv_files(int(house_id))
+if not files:
+    message = f"No CSV files in {thermostat_dir(int(house_id))}"
+    raise SystemExit(message)
+
+timestep_mins = 5
+timestep_secs = timestep_mins * 60
+timestep = pd.Timedelta(minutes=timestep_mins)
+window_length = pd.Timedelta(days=4)
+# Used only when the file has no uninterrupted 4-day stretch.
+fallback_start = 49  # MATLAB index 50
+fallback_end = 900  # MATLAB index 900, inclusive
+
+
+print(f"House {int(house_id):05d}: {len(files)} file(s)\n")
+
+for index, path in enumerate(files):
+    if index:
+        print("\n```{=latex}\n\\newpage\n```\n")
+    print(f"## {path.name}\n")
+
+    data = load_thermostat(path, timestep_secs)
+    sleep = data.loc[data["program_mode"].eq("Sleep")]
+    away = data.loc[data["program_mode"].eq("Away")]
+    print(f"{len(data):,} rows, {len(sleep):,} Sleep, {len(away):,} Away\n")
+
+    window = first_complete_window(
+        data,
+        window_length,
+        timestep,
+        ["indoor_temp_c", "heat_setpoint_c"],
+    )
+    if window is not None:
+        reason = "the first 4 days with no missing readings"
+    elif len(data) >= fallback_end:
+        window = data.iloc[fallback_start:fallback_end]
+        within_four_days = window.index < window.index[0] + window_length
+        if not within_four_days.all():
+            window = window.loc[within_four_days]
+            reason = (
+                "the first 4 days of rows 50-900, because no uninterrupted "
+                "4-day stretch was found"
+            )
+        else:
+            reason = "rows 50-900, because no uninterrupted 4-day stretch was found"
+    elif data.empty:
+        print("The file has no rows.\n")
+        continue
+    else:
+        window = data.loc[data.index < data.index[0] + window_length]
+        reason = (
+            f"the start of the file, because it has {len(data):,} rows, "
+            f"fewer than {fallback_end:,}, and no uninterrupted 4-day stretch"
+        )
+
+    sleep_window = window.loc[window["program_mode"].eq("Sleep")]
+    away_window = window.loc[window["program_mode"].eq("Away")]
+    window_start = window.index[0]
+    window_end = window.index[-1]
+    print(
+        f"Showing {reason}: {window_start} to {window_end} "
+        f"({len(window):,} rows, {len(sleep_window):,} Sleep, "
+        f"{len(away_window):,} Away).\n"
+    )
+    window_label = f"{window_start:%B %d, %Y} to {window_end:%B %d, %Y}"
+
+    figure, axis = plt.subplots(figsize=(12, 6))
+    for span_start, span_end in contiguous_blocks(sleep_window.index, timestep):
+        axis.axvspan(span_start, span_end, color=HIGHLIGHT_COLOR, alpha=0.7)
+    axis.plot(
+        window.index,
+        window["heat_setpoint_c"],
+        label="Heating setpoint",
+        color=SETPOINT_COLOR,
+    )
+    axis.plot(
+        window.index,
+        window["indoor_temp_c"],
+        label="Indoor temperature",
+        color=INDOOR_TEMP_COLOR,
+    )
+    axis.set_xlim(window.index[0], window.index[-1])
+    axis.set_ylabel("Temperature (°C)")
+    fahrenheit_axis = axis.secondary_yaxis(
+        "right",
+        functions=(celsius_to_fahrenheit, fahrenheit_to_celsius),
+    )
+    fahrenheit_axis.set_ylabel("Temperature (°F)")
+    axis.xaxis.set_major_locator(mdates.HourLocator(byhour=[0, 12]))
+    axis.xaxis.set_major_formatter(mdates.DateFormatter("%H:%M\n%b %d"))
+    handles, labels = axis.get_legend_handles_labels()
+    handles.append(Patch(facecolor=HIGHLIGHT_COLOR, alpha=0.7))
+    labels.append("Sleep mode")
+    axis.legend(
+        handles,
+        labels,
+        loc="upper center",
+        bbox_to_anchor=(0.5, -0.22),
+        ncol=3,
+    )
+    figure.tight_layout()
+    plt.show()
+    print(
+        f"\n**Figure {index + 1}.** Heating setpoint and indoor temperature for "
+        f"house {int(house_id):05d} from {window_label} ({path.name}, "
+        f"{timestep_mins}-minute readings), covering {reason}. "
+        "Shaded regions are periods in *Sleep* mode.\n"
+    )
+````

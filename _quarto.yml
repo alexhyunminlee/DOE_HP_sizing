@@ -2,6 +2,9 @@ project:
   type: default
   output-dir: output
   execute-dir: project
+  # This notebook needs HOUSE_ID and is rendered by `just thermostat`.
+  render:
+    - notebooks/eda.qmd
 execute:
   # Re-run on every project render so new or updated CSVs show up.
   freeze: false
