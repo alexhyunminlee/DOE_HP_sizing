@@ -3,14 +3,15 @@ title: "Thermostat exploratory data analysis"
 date: today
 number-sections: true
 format:
-  pdf:
-    pdf-engine: pdflatex
-    documentclass: article
-    classoption: [11pt]
-    fontfamily: mathptmx
-    geometry: margin=1in
-    linestretch: 1.15
-    colorlinks: true
+  typst:
+    papersize: us-letter
+    margin:
+      x: 1in
+      y: 1in
+    fontsize: 11pt
+    mainfont: TeX Gyre Termes
+    # Fonts committed to the repo, so the PDF looks the same on every machine.
+    font-paths: ../../fonts
 execute:
   echo: false
   warning: false
@@ -85,7 +86,7 @@ print(f"House {int(house_id):05d}: {len(files)} file(s)\n")
 
 for index, path in enumerate(files):
     if index:
-        print("\n```{=latex}\n\\newpage\n```\n")
+        print("\n```{=typst}\n#pagebreak()\n```\n")
     print(f"## {path.name}\n")
 
     data = load_thermostat(path, timestep_secs)

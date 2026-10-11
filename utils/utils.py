@@ -8,6 +8,7 @@ from pathlib import Path
 import matplotlib as mpl
 import numpy as np
 import pandas as pd
+from matplotlib import font_manager
 
 # Figure style used across notebooks (matches dev/data_preprocessing_fig.py).
 SETPOINT_COLOR = "crimson"
@@ -21,11 +22,17 @@ KW_TO_BTUH = 1 / BTUH_TO_KW
 
 
 def apply_journal_style() -> None:
-    """Serif fonts and open spines, in the style of a journal figure."""
+    """Serif fonts and open spines, in the style of a journal figure.
+
+    Uses the TeX Gyre Termes font committed under fonts/, so figures look the
+    same on every machine regardless of which fonts are installed.
+    """
+    for font_file in sorted((project_root() / "fonts").glob("*.otf")):
+        font_manager.fontManager.addfont(str(font_file))
     mpl.rcParams.update(
         {
             "font.family": "serif",
-            "font.serif": ["Times New Roman", "Times", "STIXGeneral", "DejaVu Serif"],
+            "font.serif": ["TeX Gyre Termes", "STIXGeneral", "DejaVu Serif"],
             "mathtext.fontset": "stix",
             "axes.spines.top": False,
             "axes.labelsize": 22,
@@ -153,16 +160,23 @@ def load_thermostat(path: Path, timestep_secs: float) -> pd.DataFrame:
 
 
 def markdown_table(
-    rows: list[list[str]], header: list[str], caption: str | None = None
+    rows: list[list[str]],
+    header: list[str],
+    caption: str | None = None,
+    label: str | None = None,
 ) -> str:
-    """Pipe-delimited table for printing into a Quarto document."""
+    """Pipe-delimited table for printing into a Quarto document.
+
+    Typst output drops the caption unless the table also has a unique label,
+    e.g. "tbl-fit-1".
+    """
     lines = [
         "| " + " | ".join(header) + " |",
         "| " + " | ".join("---" for _ in header) + " |",
     ]
     lines.extend("| " + " | ".join(row) + " |" for row in rows)
     if caption:
-        lines.extend(["", f": {caption}"])
+        lines.extend(["", f": {caption}" + (f" {{#{label}}}" if label else "")])
     return "\n".join(lines)
 
 

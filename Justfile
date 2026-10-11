@@ -1,23 +1,31 @@
+# Python, Quarto (with its bundled Typst PDF engine), and every package come
+# from .venv, pinned in uv.lock. These variables stop Quarto and Jupyter from
+# picking up a Python or kernel installed elsewhere on the machine.
+
+venv_python := justfile_directory() / if os_family() == "windows" { ".venv/Scripts/python.exe" } else { ".venv/bin/python" }
+export QUARTO_PYTHON := venv_python
+export JUPYTER_PATH := justfile_directory() / ".venv" / "share" / "jupyter"
+
 # List available commands
 default:
     @just --list
 
-# Create .venv, install Python packages, and install pre-commit hooks
+# Create .venv with the pinned Python and packages, and install pre-commit hooks
 setup:
-    uv sync
-    uv run prek install --install-hooks
+    uv sync --locked
+    uv run --locked prek install --install-hooks
 
 # Render every notebook to HTML under output/
 render: setup
-    uv run quarto render
+    uv run --locked quarto render
 
 # Render one notebook. Usage: just render-one notebooks/eda.qmd
 render-one file: setup
-    uv run quarto render {{ file }}
+    uv run --locked quarto render {{ file }}
 
 # Live-preview the notebooks in a browser
 preview: setup
-    uv run quarto preview
+    uv run --locked quarto preview
 
 # Render one house's thermostat report to output/house_#####/. Usage: just thermostat-eda 52
 thermostat-eda house_id: setup
@@ -33,7 +41,7 @@ _render-house house_id notebook:
     set -euo pipefail
     house="house_$(printf '%05d' {{ house_id }})"
     mkdir -p "output/$house"
-    HOUSE_ID={{ house_id }} uv run quarto render notebooks/thermostat/{{ notebook }}.qmd --to pdf --no-clean
+    HOUSE_ID={{ house_id }} uv run --locked quarto render notebooks/thermostat/{{ notebook }}.qmd --to typst --no-clean
     mv notebooks/thermostat/{{ notebook }}.pdf "output/$house/${house}_{{ notebook }}.pdf"
     rm -rf output/notebooks/thermostat
     echo ""

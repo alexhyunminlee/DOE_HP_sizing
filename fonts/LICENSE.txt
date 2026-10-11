@@ -1,0 +1,4 @@
+TeX Gyre Termes, version 2.004, by the GUST e-foundry.
+Distributed under the GUST Font License, a free license based on the LaTeX
+Project Public License: https://www.gust.org.pl/projects/e-foundry/licenses
+Source: https://www.gust.org.pl/projects/e-foundry/tex-gyre/termes

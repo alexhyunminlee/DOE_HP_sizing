@@ -3,14 +3,15 @@ title: "Heating design load from nighttime setback"
 date: today
 number-sections: true
 format:
-  pdf:
-    pdf-engine: pdflatex
-    documentclass: article
-    classoption: [11pt]
-    fontfamily: mathptmx
-    geometry: margin=1in
-    linestretch: 1.15
-    colorlinks: true
+  typst:
+    papersize: us-letter
+    margin:
+      x: 1in
+      y: 1in
+    fontsize: 11pt
+    mainfont: TeX Gyre Termes
+    # Fonts committed to the repo, so the PDF looks the same on every machine.
+    font-paths: ../../fonts
 execute:
   echo: false
   warning: false
@@ -18,7 +19,7 @@ execute:
   daemon: false
 ---
 
-This notebook estimates the heating design load for each thermostat CSV file in this house's directory. Each night's setback and recovery period (from the first heater-off interval after 21:00 until 13:00 the next day) is averaged by day. A steady-state 1R1C model, heat supply = UA x (indoor - outdoor temperature) - internal gains, is fit once to those daily averages by non-negative least squares, then extrapolated to the design conditions to give a design load with a 95% prediction interval.
+This notebook estimates the heating design load for each thermostat CSV file in this house's directory.
 
 ````{python}
 #| output: asis
@@ -91,7 +92,7 @@ print(
 
 for index, path in enumerate(files):
     if index:
-        print("\n```{=latex}\n\\newpage\n```\n")
+        print("\n```{=typst}\n#pagebreak()\n```\n")
     print("## 1R1C model fit and design load predictions\n")
 
     try:
@@ -130,6 +131,7 @@ for index, path in enumerate(files):
                 "Design load predicted by the 1R1C model at a "
                 f"{design_delta_temp_c:.1f} °C indoor-outdoor temperature difference."
             ),
+            label=f"tbl-prediction-{index + 1}",
         )
     )
     print()
@@ -144,6 +146,7 @@ for index, path in enumerate(files):
             ],
             ["Fit evaluation", "Value"],
             caption="Goodness of fit of the 1R1C model to the nightly averages.",
+            label=f"tbl-fit-{index + 1}",
         )
     )
     print()

@@ -6,6 +6,13 @@ notebooks under `notebooks/` do exploratory analysis on them. This is not a
 Python package; it is a small, self-contained repo for holding data and
 rendering a few reports.
 
+The only tools you install yourself are `git`, `uv`, and `just`. Everything
+else is pinned in `uv.lock` and installed into the repo's `.venv` by
+`just setup`: Python 3.12, every Python package, and Quarto, which includes
+the Typst engine that makes the PDFs. Nothing uses a Python, Quarto, or LaTeX
+installed elsewhere on your computer. The PDF font, TeX Gyre Termes, is
+committed under `fonts/`.
+
 ## Setup
 
 You only do this once. Pick your operating system, open a terminal, and paste
@@ -22,8 +29,6 @@ Open **Terminal** (press `Cmd + Space`, type `Terminal`, press Enter).
 
 # 2. Install the tools this repo uses
 brew install git uv just
-brew install --cask quarto
-quarto install tinytex --no-prompt
 
 # 3. Download this repo and move into it
 git clone https://github.com/alexhyunminlee/DOE_HP_sizing.git
@@ -42,14 +47,11 @@ Open **PowerShell** (press the Windows key, type `PowerShell`, press Enter).
 winget install --id Git.Git -e
 winget install --id astral-sh.uv -e
 winget install --id Casey.Just -e
-winget install --id Posit.Quarto -e
 ```
 
 Close PowerShell and open it again so the new tools are found, then:
 
 ```powershell
-quarto install tinytex --no-prompt
-
 # 2. Download this repo and move into it
 git clone https://github.com/alexhyunminlee/DOE_HP_sizing.git
 cd DOE_HP_sizing
@@ -71,13 +73,9 @@ curl -LsSf https://astral.sh/uv/install.sh | sh
 curl --proto '=https' --tlsv1.2 -sSf https://just.systems/install.sh | bash -s -- --to ~/.local/bin
 ```
 
-Install Quarto from the [Quarto download page](https://quarto.org/docs/get-started/)
-(pick the `.deb` for Ubuntu/Debian, then double-click it or run
-`sudo dpkg -i <file>.deb`). Then close the terminal, open a new one, and:
+Close the terminal and open a new one so the new tools are found, then:
 
 ```sh
-quarto install tinytex --no-prompt
-
 # 2. Download this repo and move into it
 git clone https://github.com/alexhyunminlee/DOE_HP_sizing.git
 cd DOE_HP_sizing
@@ -199,7 +197,8 @@ something, run it again to confirm the tree is clean.
 | `notebooks/`              | Quarto notebooks.                                            |
 | `output/`                 | Built reports. Not committed.                                |
 | `Justfile`                | The `just` commands listed above.                            |
-| `pyproject.toml`          | Python dependencies.                                         |
+| `fonts/`                  | TeX Gyre Termes, the font used in every PDF and figure.      |
+| `pyproject.toml`          | Python version and dependencies, including Quarto.           |
 | `uv.lock`                 | Exact dependency versions. Commit changes to it.             |
 | `_quarto.yml`             | Quarto project settings.                                     |
 | `.pre-commit-config.yaml` | Formatting and lint hooks run by `just check` and on commit. |
