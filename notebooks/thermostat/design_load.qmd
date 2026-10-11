@@ -1,0 +1,160 @@
+---
+title: "Heating design load from nighttime setback"
+date: today
+number-sections: true
+format:
+  pdf:
+    pdf-engine: pdflatex
+    documentclass: article
+    classoption: [11pt]
+    fontfamily: mathptmx
+    geometry: margin=1in
+    linestretch: 1.15
+    colorlinks: true
+execute:
+  echo: false
+  warning: false
+  # A reused kernel keeps the HOUSE_ID of whichever render started it.
+  daemon: false
+---
+
+This notebook estimates the heating design load for each thermostat CSV file in this house's directory. Each night's setback and recovery period (from the first heater-off interval after 21:00 until 13:00 the next day) is averaged by day. A steady-state 1R1C model, heat supply = UA x (indoor - outdoor temperature) - internal gains, is fit once to those daily averages by non-negative least squares, then extrapolated to the design conditions to give a design load with a 95% prediction interval.
+
+````{python}
+#| output: asis
+
+import os
+import sys
+from pathlib import Path
+
+import matplotlib.pyplot as plt
+
+# Quarto may run this notebook from its own folder, so locate the repo root
+# before importing project code.
+starts = [Path.cwd()]
+if project_dir := os.environ.get("QUARTO_PROJECT_DIR"):
+    starts.append(Path(project_dir))
+for start in starts:
+    for candidate in [start, *start.parents]:
+        if (candidate / "pyproject.toml").is_file():
+            sys.path.insert(0, str(candidate))
+            break
+    else:
+        continue
+    break
+
+from utils.design_load import (
+    fit_1r1c,
+    load_design_load_data,
+    nighttime_daily_averages,
+    plot_1r1c_fit,
+    predict_design_load,
+)
+from utils.utils import (
+    BTUH_TO_KW,
+    apply_journal_style,
+    fahrenheit_to_celsius,
+    markdown_table,
+    thermostat_csv_files,
+    thermostat_dir,
+)
+
+apply_journal_style()
+
+house_id = os.environ.get("HOUSE_ID", "").strip()
+if not house_id.isdigit():
+    message = "Set HOUSE_ID to a house number. Example: just thermostat-design-load 52"
+    raise SystemExit(message)
+house_id = int(house_id)
+
+files = thermostat_csv_files(house_id)
+if not files:
+    message = f"No CSV files in {thermostat_dir(house_id)}"
+    raise SystemExit(message)
+
+# Equipment and location specific inputs.
+timestep_secs = 5 * 60  # ecobee records every 5 minutes
+heater_startup_secs = 35
+q_max_btuh = 80_000  # Rated capacity of heat stage 1
+design_outdoor_temp_f = 18  # Use the latest Manual J lookup table
+design_indoor_temp_f = 70
+design_delta_temp_c = fahrenheit_to_celsius(
+    design_indoor_temp_f
+) - fahrenheit_to_celsius(design_outdoor_temp_f)
+
+print(
+    f"House {house_id:05d}, {len(files)} file(s). Design conditions: "
+    f"{design_indoor_temp_f} °F indoors and {design_outdoor_temp_f} °F outdoors "
+    f"(a {design_delta_temp_c:.1f} °C difference). Heat stage 1 is rated at "
+    f"{q_max_btuh:,} BTU/h with a {heater_startup_secs} s start-up.\n"
+)
+
+for index, path in enumerate(files):
+    if index:
+        print("\n```{=latex}\n\\newpage\n```\n")
+    print("## 1R1C model fit and design load predictions\n")
+
+    try:
+        data = load_design_load_data(
+            path, timestep_secs, q_max_btuh, heater_startup_secs
+        )
+        daily = nighttime_daily_averages(data)
+        fit = fit_1r1c(daily)
+    except ValueError as error:
+        print(f"{error}\n")
+        continue
+    design = predict_design_load(fit, design_delta_temp_c)
+
+    print(
+        markdown_table(
+            [
+                ["Design load", f"{design.btuh:,.0f}", f"{design.kw:.1f}"],
+                [
+                    f"{design.confidence:.0%} prediction interval",
+                    f"{design.lower_btuh:,.0f} to {design.upper_btuh:,.0f}",
+                    f"{design.lower_kw:.1f} to {design.upper_kw:.1f}",
+                ],
+                [
+                    "Internal heat gain",
+                    f"{fit.internal_gain_btuh:,.0f}",
+                    f"{fit.internal_gain_kw:.1f}",
+                ],
+                [
+                    "R value",
+                    f"{fit.r_value_k_per_kw * BTUH_TO_KW * 1000:.3f} K per kBTU/h",
+                    f"{fit.r_value_k_per_kw:.2f} K/kW",
+                ],
+            ],
+            ["Prediction", "BTU/h", "kW"],
+            caption=(
+                "Design load predicted by the 1R1C model at a "
+                f"{design_delta_temp_c:.1f} °C indoor-outdoor temperature difference."
+            ),
+        )
+    )
+    print()
+    print(
+        markdown_table(
+            [
+                ["Nights (samples)", f"{fit.n_days}"],
+                ["R squared", f"{fit.r_squared:.3f}"],
+                ["F statistic vs. no model", f"{fit.f_value:,.1f}"],
+                ["F critical (alpha = 0.05)", f"{fit.f_critical:.2f}"],
+                ["Model significant", "Yes" if fit.is_significant else "No"],
+            ],
+            ["Fit evaluation", "Value"],
+            caption="Goodness of fit of the 1R1C model to the nightly averages.",
+        )
+    )
+    print()
+
+    plot_1r1c_fit(fit, design)
+    plt.show()
+    print(
+        f"\n**Figure {index + 1}.** Nightly average heat supply against the "
+        "indoor-outdoor temperature difference, with the 1R1C regression line and "
+        f"its {design.confidence:.0%} prediction band. The orange bar spans the "
+        f"prediction interval at the design temperature difference "
+        f"({design_delta_temp_c:.1f} °C).\n"
+    )
+````

@@ -97,19 +97,19 @@ just thermostat-eda 52
 ```
 
 This builds the thermostat report for house `00052` and saves it as
-`output/house_52.pdf`. The terminal prints the location when it finishes.
+`output/house_00052/house_00052_eda.pdf`. The terminal prints the location when
+it finishes.
 Double-click the PDF to open it.
 
 Swap `52` for any other house number that has a folder under `data/thermostat/`.
 
-To build the general data-summary report instead:
+To estimate the heating design load for a house:
 
 ```sh
-just render
+just thermostat-design-load 52
 ```
 
-The result is written to `output/notebooks/eda.html`. Double-click it to open it
-in your browser.
+This saves `output/house_00052/house_00052_design_load.pdf`.
 
 If you come back later and the repo has changed, run `git pull` inside the
 folder to get the latest version, then `just setup` again.
@@ -157,31 +157,35 @@ Quarto notebooks (`.qmd`) live under `notebooks/`. Rendering runs the Python in
 each one and writes HTML to `output/` (gitignored). Rendering always
 re-executes the code, so new data show up without editing the notebooks.
 
-| Notebook                       | What it does                                                                                                                                                                                                                                                        |
-| ------------------------------ | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| `notebooks/eda.qmd`            | Generic summary of every CSV directly inside `data/`: shape, column types, missing values, numeric summary, and histograms.                                                                                                                                         |
-| `notebooks/thermostat/eda.qmd` | Thermostat exploration for one house. Converts temperatures to °C, computes heat-stage runtime fraction per interval, splits out `Sleep` and `Away` periods, and plots about three days of heat setpoint vs. indoor temperature to show nighttime setback patterns. |
+| Notebook                               | What it does                                                                                                                                                                                                                                                        |
+| -------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `notebooks/eda.qmd`                    | Generic summary of every CSV directly inside `data/`: shape, column types, missing values, numeric summary, and histograms.                                                                                                                                         |
+| `notebooks/thermostat/eda.qmd`         | Thermostat exploration for one house. Converts temperatures to °C, computes heat-stage runtime fraction per interval, splits out `Sleep` and `Away` periods, and plots about three days of heat setpoint vs. indoor temperature to show nighttime setback patterns. |
+| `notebooks/thermostat/design_load.qmd` | Heating design load for one house. Extracts each nighttime setback and recovery period, averages by day, fits a 1R1C model once by non-negative least squares, and extrapolates to design conditions with a 95% prediction interval.                                |
 
-The thermostat notebook reads the house number from the `HOUSE_ID` environment
-variable (set for you by `just thermostat-eda <id>`) and plots every CSV in that
-house's folder, each on its own page. `just render` skips it because it needs a
-house number.
-
-To add an analysis, create a new `.qmd` under `notebooks/` and run
-`just render`. File paths inside notebooks are relative to the repo root, so
-`Path("data") / ...` works from any subfolder.
+The thermostat notebooks read the house number from the `HOUSE_ID` environment
+variable (set for you by `just thermostat-eda <id>` and
+`just thermostat-design-load <id>`) and process every CSV in that house's
+folder, each on its own page.
 
 ## For contributors
+
+These commands are for developing the notebooks. The two report commands above
+are the only ones meant for people viewing results.
 
 | Command                      | What it does                                           |
 | ---------------------------- | ------------------------------------------------------ |
 | `just`                       | List all commands                                      |
-| `just thermostat-eda <id>`   | Build the thermostat PDF report for one house          |
 | `just render`                | Build the general data-summary report into `output/`   |
 | `just render-one <file.qmd>` | Build one notebook                                     |
 | `just preview`               | Live preview that rebuilds when a notebook changes     |
 | `just check`                 | Format and lint everything (also runs on `git commit`) |
 | `just clean`                 | Delete built reports and caches                        |
+
+`just render` skips the thermostat notebooks because they need a house number.
+To add an analysis, create a new `.qmd` under `notebooks/` and run
+`just render`. File paths inside notebooks are relative to the repo root, so
+`Path("data") / ...` works from any subfolder.
 
 `just check` fixes files in place. If it reports a failure because it changed
 something, run it again to confirm the tree is clean.

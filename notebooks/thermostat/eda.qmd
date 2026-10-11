@@ -1,5 +1,5 @@
 ---
-title: "Thermostat exploratory analysis"
+title: "Thermostat exploratory data analysis"
 date: today
 number-sections: true
 format:
@@ -14,9 +14,11 @@ format:
 execute:
   echo: false
   warning: false
+  # A reused kernel keeps the HOUSE_ID of whichever render started it.
+  daemon: false
 ---
 
-Temperatures are converted from Fahrenheit to Celsius, and the heat-stage runtime is the fraction of each 5-minute interval the stage was on. Set `HOUSE_ID` and render with `just thermostat-eda <house_id>`. Each thermostat CSV in that house is plotted on its own page. The window is the first four days in which every reading is present. When the file has no such stretch, the figure falls back to an earlier fixed segment, and it never covers more than four days. Shaded regions mark periods when the thermostat schedule was in *Sleep* mode.
+This notebook shows the heating setpoint and indoor temperature for each thermostat CSV file in this house_id's directory.
 
 ````{python}
 #| output: asis
@@ -87,49 +89,23 @@ for index, path in enumerate(files):
     print(f"## {path.name}\n")
 
     data = load_thermostat(path, timestep_secs)
-    sleep = data.loc[data["program_mode"].eq("Sleep")]
-    away = data.loc[data["program_mode"].eq("Away")]
-    print(f"{len(data):,} rows, {len(sleep):,} Sleep, {len(away):,} Away\n")
-
     window = first_complete_window(
         data,
         window_length,
         timestep,
         ["indoor_temp_c", "heat_setpoint_c"],
     )
-    if window is not None:
-        reason = "the first 4 days with no missing readings"
-    elif len(data) >= fallback_end:
+    if window is None and len(data) >= fallback_end:
         window = data.iloc[fallback_start:fallback_end]
         within_four_days = window.index < window.index[0] + window_length
-        if not within_four_days.all():
-            window = window.loc[within_four_days]
-            reason = (
-                "the first 4 days of rows 50-900, because no uninterrupted "
-                "4-day stretch was found"
-            )
-        else:
-            reason = "rows 50-900, because no uninterrupted 4-day stretch was found"
-    elif data.empty:
+        window = window.loc[within_four_days]
+    elif window is None and data.empty:
         print("The file has no rows.\n")
         continue
-    else:
+    elif window is None:
         window = data.loc[data.index < data.index[0] + window_length]
-        reason = (
-            f"the start of the file, because it has {len(data):,} rows, "
-            f"fewer than {fallback_end:,}, and no uninterrupted 4-day stretch"
-        )
 
     sleep_window = window.loc[window["program_mode"].eq("Sleep")]
-    away_window = window.loc[window["program_mode"].eq("Away")]
-    window_start = window.index[0]
-    window_end = window.index[-1]
-    print(
-        f"Showing {reason}: {window_start} to {window_end} "
-        f"({len(window):,} rows, {len(sleep_window):,} Sleep, "
-        f"{len(away_window):,} Away).\n"
-    )
-    window_label = f"{window_start:%B %d, %Y} to {window_end:%B %d, %Y}"
 
     figure, axis = plt.subplots(figsize=(12, 6))
     for span_start, span_end in contiguous_blocks(sleep_window.index, timestep):
@@ -167,10 +143,9 @@ for index, path in enumerate(files):
     )
     figure.tight_layout()
     plt.show()
+    thermostat_number = path.stem.rsplit("_", 1)[-1]
     print(
-        f"\n**Figure {index + 1}.** Heating setpoint and indoor temperature for "
-        f"house {int(house_id):05d} from {window_label} ({path.name}, "
-        f"{timestep_mins}-minute readings), covering {reason}. "
-        "Shaded regions are periods in *Sleep* mode.\n"
+        f"\n**Figure {index + 1}.** House {int(house_id):05d} thermostat "
+        f"{thermostat_number} indoor temperature vs heating setpoint"
     )
 ````

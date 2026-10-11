@@ -15,6 +15,10 @@ INDOOR_TEMP_COLOR = "mediumblue"
 HIGHLIGHT_COLOR = "lightpink"
 LINE_WIDTH = 3
 
+# Unit conversions.
+BTUH_TO_KW = 0.000293071
+KW_TO_BTUH = 1 / BTUH_TO_KW
+
 
 def apply_journal_style() -> None:
     """Serif fonts and open spines, in the style of a journal figure."""
@@ -103,11 +107,11 @@ def project_root() -> Path:
     raise FileNotFoundError(message)
 
 
-def fahrenheit_to_celsius(temperature_f: pd.Series) -> pd.Series:
+def fahrenheit_to_celsius[T: (float, pd.Series)](temperature_f: T) -> T:
     return (temperature_f - 32) * 5 / 9
 
 
-def celsius_to_fahrenheit(temperature_c: pd.Series) -> pd.Series:
+def celsius_to_fahrenheit[T: (float, pd.Series)](temperature_c: T) -> T:
     return temperature_c * 9 / 5 + 32
 
 
@@ -146,3 +150,23 @@ def load_thermostat(path: Path, timestep_secs: float) -> pd.DataFrame:
         },
         index=pd.DatetimeIndex(thermostat["timestamp"], name="timestamp"),
     )
+
+
+def markdown_table(
+    rows: list[list[str]], header: list[str], caption: str | None = None
+) -> str:
+    """Pipe-delimited table for printing into a Quarto document."""
+    lines = [
+        "| " + " | ".join(header) + " |",
+        "| " + " | ".join("---" for _ in header) + " |",
+    ]
+    lines.extend("| " + " | ".join(row) + " |" for row in rows)
+    if caption:
+        lines.extend(["", f": {caption}"])
+    return "\n".join(lines)
+
+
+def r_squared(predicted: np.ndarray, observed: np.ndarray) -> float:
+    residual_sum = float(np.sum((observed - predicted) ** 2))
+    total_sum = float(np.sum((observed - observed.mean()) ** 2))
+    return 1 - residual_sum / total_sum
