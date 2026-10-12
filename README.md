@@ -116,12 +116,21 @@ folder to get the latest version, then `just setup` again.
 
 All data are plain CSVs in `data/`.
 
-### `data/metadata/characteristics.csv`
+### `data/metadata/survey.csv`
 
-One row per house (74 houses). Columns: `house_id`, `characteristics.city`,
-`characteristics.state`, `characteristics.survey_floor_area_sqft`. The
+One row per house (74 houses) with the homeowner survey responses. The
 `house_id` is a zero-padded five-digit string (for example `00052`) and is the
-key that links to the thermostat folders below.
+key that links to the thermostat folders below. Every other column is prefixed
+`survey.` to mark its source:
+
+| Column                               | Meaning                                                                       |
+| ------------------------------------ | ----------------------------------------------------------------------------- |
+| `house_id`                           | Zero-padded five-digit house ID                                               |
+| `survey.city`, `survey.state`        | Location of the house                                                         |
+| `survey.conditioned_floor_area_sqft` | Conditioned floor area reported by the homeowner, ft²                         |
+| `survey.original_construction_year`  | Year the house was built                                                      |
+| `survey.n_floors`                    | Number of floors (`1`, `1.5`, `2`, or `3`)                                    |
+| `survey.house_type`                  | Housing type, for example `Single Family Detached`; `Unknown` if not reported |
 
 ### `data/thermostat/house_<house_id>/`
 
@@ -192,7 +201,7 @@ something, run it again to confirm the tree is clean.
 
 | Path                      | Purpose                                                      |
 | ------------------------- | ------------------------------------------------------------ |
-| `data/metadata/`          | House characteristics (one row per house).                   |
+| `data/metadata/`          | Homeowner survey responses (one row per house).              |
 | `data/thermostat/`        | Per-house thermostat CSVs, one folder per `house_id`.        |
 | `notebooks/`              | Quarto notebooks.                                            |
 | `output/`                 | Built reports. Not committed.                                |

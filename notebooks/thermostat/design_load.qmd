@@ -83,13 +83,6 @@ design_delta_temp_c = fahrenheit_to_celsius(
     design_indoor_temp_f
 ) - fahrenheit_to_celsius(design_outdoor_temp_f)
 
-print(
-    f"House {house_id:05d}, {len(files)} file(s). Design conditions: "
-    f"{design_indoor_temp_f} °F indoors and {design_outdoor_temp_f} °F outdoors "
-    f"(a {design_delta_temp_c:.1f} °C difference). Heat stage 1 is rated at "
-    f"{q_max_btuh:,} BTU/h with a {heater_startup_secs} s start-up.\n"
-)
-
 for index, path in enumerate(files):
     if index:
         print("\n```{=typst}\n#pagebreak()\n```\n")

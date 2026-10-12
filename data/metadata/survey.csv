@@ -1,0 +1,76 @@
+house_id,survey.city,survey.state,survey.conditioned_floor_area_sqft,survey.original_construction_year,survey.n_floors,survey.house_type
+00001,Bloomington,IN,1580,1962,2,Single Family Detached
+00002,Conroe,TX,2884,1974,2,Single Family Detached
+00003,Sacramento,CA,1806,1979,2,Single Family Detached
+00004,Livonia,MI,2204,1965,2,Single Family Detached
+00005,Davenport,IA,1400,2001,1,Single Family Detached
+00006,Carmel,IN,2400,1994,2,Single Family Detached
+00007,Wilmington,DE,2800,1971,2,Unknown
+00008,Bridgeton,MO,2730,1981,2,Single Family Detached
+00009,Westfield,IN,4028,2024,2,Single Family Detached
+00010,Berthoud,CO,1830,2021,2,Single Family Detached
+00011,O'Fallon,MO,2600,2011,2,Single Family Detached
+00012,Boardman,OH,3000,1954,2,Single Family Detached
+00013,Hellertown,PA,5000,2005,2,Single Family Detached
+00014,West Lafayette,IN,3400,1938,2,Single Family Detached
+00015,Helena,MT,1950,2017,1,Single Family Detached
+00016,Mundelein,IL,1288,1960,1,Single Family Detached
+00017,Allen,TX,3755,2019,2,Single Family Detached
+00018,Lafayette,IN,2000,2006,2,Single Family Detached
+00019,Columbia,IL,2690,2005,1,Single Family Detached
+00020,Fort Worth,TX,2736,2005,2,Single Family Detached
+00021,Mount Washington,PA,2123,1965,1,Single Family Detached
+00022,Houston,TX,4380,2008,2,Single Family Detached
+00023,West Lafayette,IN,2239,1920,2,Single Family Detached
+00024,Akron,OH,1142,1958,2,Single Family Detached
+00025,Moreno Valley,CA,1550,1987,2,Single Family Detached
+00026,Mundelein,IL,2089,1996,2,Single Family Detached
+00027,Madison,WI,3075,1974,2,Single Family Detached
+00028,Littleton,CO,2565,1979,2,Single Family Detached
+00029,Boise,ID,1757,2006,2,Single Family Detached
+00030,Rockville,MD,2376,1969,2,Single Family Detached
+00031,West Lafayette,IN,3873,2010,2,Single Family Detached
+00032,Carmel,IN,2462,1999,1,Single Family Detached
+00033,Florissant,MO,2400,1979,2,Single Family Detached
+00034,Lafayette,IN,1670,2004,1,Single Family Detached
+00035,Petersburg,MI,1500,1950,1,Single Family Detached
+00036,Shelby Township,MI,2700,1977,3,Single Family Detached
+00037,Lafayette,IN,2000,1976,1,Single Family Detached
+00038,Lafayette,IN,1670,1975,1,Single Family Detached
+00039,West Lafayette,IN,2800,2004,2,Single Family Detached
+00040,West Lafayette,IN,2388,2013,2,Single Family Detached
+00041,Colorado Springs,CO,3500,2013,2,Single Family Detached
+00042,Trenton,MI,1430,1918,2,Single Family Detached
+00043,Algonquin,IL,3100,2001,2,Single Family Detached
+00044,Richardson,TX,1832,1956,1,Single Family Detached
+00045,Greensboro,NC,2100,1967,3,Single Family Detached
+00046,Edwardsville,IL,1768,1960,1,Single Family Detached
+00047,Fort Wayne,IN,1929,1978,2,Single Family Detached
+00048,Nashville,TN,1950,2007,1.5,Single Family Detached
+00049,Wauwatosa,WI,2300,1951,1,Single Family Detached
+00050,Charleston,SC,2072,2011,2,Single Family Detached
+00051,West Lafayette,IN,3800,1951,1,Single Family Detached
+00052,Ashburn,VA,2878,1996,2,Single Family Detached
+00053,Northport,AL,1637,1998,1,Single Family Detached
+00054,Chapel Hill,NC,1800,1965,2,Single Family Detached
+00055,Elkhart,IN,3000,2008,1,Single Family Detached
+00056,San Antonio,TX,2616,1980,1,Single Family Detached
+00057,Lafayette,IN,1792,1896,2,Single Family Detached
+00058,Westville,NJ,1288,1999,1,Single Family Detached
+00059,Lima,OH,2000,1920,2,Single Family Detached
+00060,Annville,PA,3050,2000,2,Single Family Detached
+00061,Taylor,MI,750,1947,1.5,Single Family Detached
+00062,Pingree Grove,IL,2040,2015,2,Single Family Detached
+00063,Bloomington,MN,2988,2005,2,Single Family Detached
+00064,Tucson,AZ,1030,1960,1,Single Family Detached
+00065,Mason,MI,2850,2012,2,Single Family Detached
+00066,Rio Rancho,NM,2506,2006,2,Single Family Detached
+00067,Austin,TX,1979,1997,2,Single Family Detached
+00068,Dearborn,MI,1476,1942,1,Single Family Detached
+00069,Colorado Springs,CO,1722,1973,1,Single Family Detached
+00070,Indianapolis,IN,3291,1960,1,Single Family Detached
+00071,Marietta,GA,2830,1982,2,Single Family Detached
+00072,Cedar Rapids,IA,2200,1920,2,Single Family Detached
+00073,Urbana,IL,1008,1878,1,Single Family Detached
+00074,Carmel,IN,3151,2012,2,Single Family Detached
+00075,Mount Pleasant,MI,2500,1979,1,Single Family Detached
