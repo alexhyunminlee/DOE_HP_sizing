@@ -91,23 +91,23 @@ activate first; the `just` commands use the project's environment on their
 own):
 
 ```sh
-just thermostat-eda 52
+just thermostat-eda 1
 ```
 
-This builds the thermostat report for house `00052` and saves it as
-`output/house_00052/house_00052_eda.pdf`. The terminal prints the location when
+This builds the thermostat report for house `00001` and saves it as
+`output/house_00001/house_00001_eda.pdf`. The terminal prints the location when
 it finishes.
 Double-click the PDF to open it.
 
-Swap `52` for any other house number that has a folder under `data/thermostat/`.
+Swap `1` for any other house number that has a folder under `data/thermostat/`.
 
 To estimate the heating design load for a house:
 
 ```sh
-just thermostat-design-load 52
+just thermostat-design-load 1
 ```
 
-This saves `output/house_00052/house_00052_design_load.pdf`.
+This saves `output/house_00001/house_00001_design_load.pdf`.
 
 To explore one house's utility bills against thermostat temperatures:
 
@@ -127,7 +127,7 @@ All data are plain CSVs in `data/`.
 ### `data/metadata/survey.csv`
 
 One row per house (74 houses) with the homeowner survey responses. The
-`house_id` is a zero-padded five-digit string (for example `00052`) and is the
+`house_id` is a zero-padded five-digit string (for example `00001`) and is the
 key that links to the thermostat folders below. Every other column is prefixed
 `survey.` to mark its source:
 
@@ -143,9 +143,9 @@ key that links to the thermostat folders below. Every other column is prefixed
 ### `data/thermostat/house_<house_id>/`
 
 One folder per house, named with the same zero-padded ID
-(`data/thermostat/house_00052/`). Each folder holds that house's thermostat
+(`data/thermostat/house_00001/`). Each folder holds that house's thermostat
 logs, for example `thermostat_data_1.csv`. Readings are at a 5-minute timestep.
-Currently only house `00052` has data (135,648 rows, about 15 months).
+Currently only house `00001` has data (135,648 rows, about 15 months).
 
 The columns have been normalized to `snake_case` with units in the name:
 
