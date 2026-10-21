@@ -1,0 +1,109 @@
+---
+title: "Utility bill exploratory data analysis"
+date: today
+number-sections: true
+format:
+  typst:
+    papersize: us-letter
+    margin:
+      x: 1in
+      y: 1in
+    fontsize: 11pt
+    mainfont: TeX Gyre Termes
+    # Fonts committed to the repo, so the PDF looks the same on every machine.
+    font-paths: ../../fonts
+execute:
+  echo: false
+  warning: false
+  # A reused kernel keeps the HOUSE_ID of whichever render started it.
+  daemon: false
+---
+
+This notebook plots monthly average heat supply against the indoor-outdoor
+temperature difference for each utility-bill CSV in this house's directory.
+Indoor temperature is the mean of `indoor_temp_f` in the house thermostat
+`data.csv`, or 70 °F if that file is missing. Outdoor temperature is
+`temperature (degC)` in `weather_data.csv`. A threshold $\tau^*$ splits
+baseload months (constant mean) from heating months (linear in $\Delta T$)
+by minimizing the overall RMSE of that piecewise model.
+
+````{python}
+#| output: asis
+
+import os
+import sys
+from pathlib import Path
+
+import matplotlib.pyplot as plt
+
+# Quarto may run this notebook from its own folder, so locate the repo root
+# before importing project code.
+starts = [Path.cwd()]
+if project_dir := os.environ.get("QUARTO_PROJECT_DIR"):
+    starts.append(Path(project_dir))
+for start in starts:
+    for candidate in [start, *start.parents]:
+        if (candidate / "pyproject.toml").is_file():
+            sys.path.insert(0, str(candidate))
+            break
+    else:
+        continue
+    break
+
+from utils.bill import (
+    indoor_temperature_note,
+    load_bill_threshold_fit,
+    plot_threshold_fit,
+)
+from utils.utils import (
+    apply_journal_style,
+    celsius_to_fahrenheit,
+    utility_bill_csv_files,
+    utility_bill_dir,
+)
+
+apply_journal_style()
+
+house_id = os.environ.get("HOUSE_ID", "").strip()
+if not house_id.isdigit():
+    message = "Set HOUSE_ID to a house number. Example: just bill-eda 1"
+    raise SystemExit(message)
+house_id = int(house_id)
+
+files = utility_bill_csv_files(house_id)
+if not files:
+    message = f"No CSV files in {utility_bill_dir(house_id)}"
+    raise SystemExit(message)
+
+print(f"House {house_id:05d}: {len(files)} file(s)\n")
+
+for index, path in enumerate(files):
+    if index:
+        print("\n```{=typst}\n#pagebreak()\n```\n")
+    print(f"## {path.name}\n")
+
+    try:
+        fit = load_bill_threshold_fit(path, house_id)
+    except (FileNotFoundError, ValueError) as error:
+        print(f"{error}\n")
+        continue
+
+    print(indoor_temperature_note(fit))
+    plot_threshold_fit(fit)
+    plt.show()
+    indoor_f = celsius_to_fahrenheit(fit.indoor_temp_c)
+    indoor_clause = (
+        f"mean thermostat indoor temperature ({indoor_f:.1f} °F / "
+        f"{fit.indoor_temp_c:.1f} °C)"
+        if fit.indoor_from_thermostat
+        else "assumed indoor temperature of 70 °F (no thermostat data.csv)"
+    )
+    print(
+        f"\n**Figure {index + 1}.** House {house_id:05d} monthly average heat "
+        "supply against the indoor-outdoor temperature difference, using the "
+        f"{indoor_clause} and outdoor `temperature (degC)` from "
+        r"`weather_data.csv`. The dashed line is the threshold "
+        rf"$\tau^*$ = {fit.threshold_c:.1f} °C that minimizes the overall "
+        "RMSE of a constant mean below the threshold and a linear fit above it."
+    )
+````

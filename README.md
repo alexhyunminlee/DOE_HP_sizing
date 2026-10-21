@@ -109,6 +109,14 @@ just thermostat-design-load 52
 
 This saves `output/house_00052/house_00052_design_load.pdf`.
 
+To explore one house's utility bills against thermostat temperatures:
+
+```sh
+just bill-eda 1
+```
+
+This saves `output/house_00001/house_00001_bill_eda.pdf`.
+
 If you come back later and the repo has changed, run `git pull` inside the
 folder to get the latest version, then `just setup` again.
 
@@ -158,26 +166,40 @@ To add a house, create `data/thermostat/house_<id>/` and drop its CSVs in. The
 large-file check in the pre-commit hooks is turned off for `data/`, so files of
 this size commit fine.
 
+### `data/utility_bill/house_<house_id>/`
+
+One folder per house, same `house_id` as the thermostat folders. Each folder
+holds that house's gas-bill CSV as `data.csv`, with one row per billing
+period, and hourly outdoor weather as `weather_data.csv` (ERA5
+`temperature (degC)`):
+
+| Column                                    | Meaning                                    |
+| ----------------------------------------- | ------------------------------------------ |
+| `start_date`, `end_date`                  | Inclusive first and last day of the period |
+| `consumption_therms` or `consumption_ccf` | Billed use in the original unit            |
+| `consumption_btu`                         | The same use converted to BTU              |
+
 ## Notebooks
 
 Quarto notebooks (`.qmd`) live under `notebooks/`. Rendering runs the Python in
 each one and writes HTML to `output/` (gitignored). Rendering always
 re-executes the code, so new data show up without editing the notebooks.
 
-| Notebook                               | What it does                                                                                                                                                                                                                                                        |
-| -------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| `notebooks/eda.qmd`                    | Generic summary of every CSV directly inside `data/`: shape, column types, missing values, numeric summary, and histograms.                                                                                                                                         |
-| `notebooks/thermostat/eda.qmd`         | Thermostat exploration for one house. Converts temperatures to °C, computes heat-stage runtime fraction per interval, splits out `Sleep` and `Away` periods, and plots about three days of heat setpoint vs. indoor temperature to show nighttime setback patterns. |
-| `notebooks/thermostat/design_load.qmd` | Heating design load for one house. Extracts each nighttime setback and recovery period, averages by day, fits a 1R1C model once by non-negative least squares, and extrapolates to design conditions with a 95% prediction interval.                                |
+| Notebook                               | What it does                                                                                                                                                                                                                                                                                                                                      |
+| -------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `notebooks/eda.qmd`                    | Generic summary of every CSV directly inside `data/`: shape, column types, missing values, numeric summary, and histograms.                                                                                                                                                                                                                       |
+| `notebooks/thermostat/eda.qmd`         | Thermostat exploration for one house. Converts temperatures to °C, computes heat-stage runtime fraction per interval, splits out `Sleep` and `Away` periods, and plots about three days of heat setpoint vs. indoor temperature to show nighttime setback patterns.                                                                               |
+| `notebooks/thermostat/design_load.qmd` | Heating design load for one house. Extracts each nighttime setback and recovery period, averages by day, fits a 1R1C model once by non-negative least squares, and extrapolates to design conditions with a 95% prediction interval.                                                                                                              |
+| `notebooks/bill/eda.qmd`               | Utility-bill exploration for one house. Joins each billing period to the mean thermostat indoor temperature (or 70 °F if `data.csv` is missing) and ERA5 outdoor `temperature (degC)` from `weather_data.csv`, finds the $\Delta T$ threshold that splits baseload from heating months, and plots monthly average heat supply against $\Delta T$. |
 
-The thermostat notebooks read the house number from the `HOUSE_ID` environment
-variable (set for you by `just thermostat-eda <id>` and
-`just thermostat-design-load <id>`) and process every CSV in that house's
-folder, each on its own page.
+The thermostat and bill notebooks read the house number from the `HOUSE_ID`
+environment variable (set for you by `just thermostat-eda <id>`,
+`just thermostat-design-load <id>`, and `just bill-eda <id>`) and process every
+CSV in that house's folder, each on its own page.
 
 ## For contributors
 
-These commands are for developing the notebooks. The two report commands above
+These commands are for developing the notebooks. The report commands above
 are the only ones meant for people viewing results.
 
 | Command                      | What it does                                           |
@@ -189,7 +211,8 @@ are the only ones meant for people viewing results.
 | `just check`                 | Format and lint everything (also runs on `git commit`) |
 | `just clean`                 | Delete built reports and caches                        |
 
-`just render` skips the thermostat notebooks because they need a house number.
+`just render` skips the thermostat and bill notebooks because they need a house
+number.
 To add an analysis, create a new `.qmd` under `notebooks/` and run
 `just render`. File paths inside notebooks are relative to the repo root, so
 `Path("data") / ...` works from any subfolder.
@@ -203,6 +226,7 @@ something, run it again to confirm the tree is clean.
 | ------------------------- | ------------------------------------------------------------ |
 | `data/metadata/`          | Homeowner survey responses (one row per house).              |
 | `data/thermostat/`        | Per-house thermostat CSVs, one folder per `house_id`.        |
+| `data/utility_bill/`      | Per-house gas-bill CSVs, one folder per `house_id`.          |
 | `notebooks/`              | Quarto notebooks.                                            |
 | `output/`                 | Built reports. Not committed.                                |
 | `Justfile`                | The `just` commands listed above.                            |

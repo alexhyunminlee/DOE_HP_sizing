@@ -132,6 +132,51 @@ def thermostat_csv_files(house_id: int) -> list[Path]:
     )
 
 
+def utility_bill_dir(house_id: int) -> Path:
+    return project_root() / "data" / "utility_bill" / f"house_{house_id:05d}"
+
+
+def utility_bill_csv_files(house_id: int) -> list[Path]:
+    return sorted(
+        path
+        for path in utility_bill_dir(house_id).glob("*.csv")
+        if path.is_file() and path.name != "weather_data.csv"
+    )
+
+
+def weather_data_path(house_id: int) -> Path:
+    return utility_bill_dir(house_id) / "weather_data.csv"
+
+
+def load_weather(house_id: int) -> pd.Series:
+    """Hourly outdoor temperature (°C) from ``weather_data.csv``.
+
+    The first column is the timestamp; outdoor temperature is
+    ``temperature (degC)``.
+    """
+    path = weather_data_path(house_id)
+    if not path.is_file():
+        message = f"No weather file at {path}"
+        raise FileNotFoundError(message)
+    weather = pd.read_csv(path)
+    if "temperature (degC)" not in weather.columns:
+        message = f"{path.name} has no 'temperature (degC)' column."
+        raise ValueError(message)
+    index = pd.to_datetime(weather.iloc[:, 0], format="mixed")
+    outdoor = pd.to_numeric(weather["temperature (degC)"], errors="coerce")
+    series = pd.Series(outdoor.to_numpy(), index=index, name="outdoor_temp_c")
+    return series.dropna().sort_index()
+
+
+def load_utility_bill(path: Path) -> pd.DataFrame:
+    """One utility-bill CSV, with billing dates parsed."""
+    bill = pd.read_csv(path, parse_dates=["start_date", "end_date"])
+    if "consumption_btu" not in bill.columns:
+        message = f"{path.name} has no consumption_btu column."
+        raise ValueError(message)
+    return bill.sort_values("end_date").reset_index(drop=True)
+
+
 def load_thermostat(path: Path, timestep_secs: float) -> pd.DataFrame:
     """One thermostat CSV, with temperatures in Celsius and a runtime fraction.
 

@@ -35,6 +35,10 @@ thermostat-eda house_id: setup
 thermostat-design-load house_id: setup
     @just _render-house {{ house_id }} design_load
 
+# Render one house's utility-bill report to output/house_#####/. Usage: just bill-eda 1
+bill-eda house_id: setup
+    @just _render-bill {{ house_id }} eda
+
 # Render notebooks/thermostat/<notebook>.qmd for one house to output/house_#####/house_#####_<notebook>.pdf
 _render-house house_id notebook:
     #!/usr/bin/env bash
@@ -46,6 +50,18 @@ _render-house house_id notebook:
     rm -rf output/notebooks/thermostat
     echo ""
     echo "Done. The report is at: output/$house/${house}_{{ notebook }}.pdf"
+
+# Render notebooks/bill/<notebook>.qmd for one house to output/house_#####/house_#####_bill_<notebook>.pdf
+_render-bill house_id notebook:
+    #!/usr/bin/env bash
+    set -euo pipefail
+    house="house_$(printf '%05d' {{ house_id }})"
+    mkdir -p "output/$house"
+    HOUSE_ID={{ house_id }} uv run --locked quarto render notebooks/bill/{{ notebook }}.qmd --to typst --no-clean
+    mv notebooks/bill/{{ notebook }}.pdf "output/$house/${house}_bill_{{ notebook }}.pdf"
+    rm -rf output/notebooks/bill
+    echo ""
+    echo "Done. The report is at: output/$house/${house}_bill_{{ notebook }}.pdf"
 
 # Run code quality tools
 check: setup
