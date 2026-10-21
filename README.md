@@ -149,18 +149,19 @@ Currently only house `00001` has data (135,648 rows, about 15 months).
 
 The columns have been normalized to `snake_case` with units in the name:
 
-| Column                                      | Meaning                                                   |
-| ------------------------------------------- | --------------------------------------------------------- |
-| `timestamp`                                 | Reading time, `YYYY-MM-DD HH:MM:SS`                       |
-| `system_setting`, `system_mode`             | Thermostat setting (e.g. `heat`) and current mode         |
-| `program_mode`                              | Schedule state: `Home`, `Sleep`, `Away`                   |
-| `heat_setpoint_f`, `cool_setpoint_f`        | Setpoints, °F                                             |
-| `indoor_temp_f`, `indoor_humidity_pct`      | Indoor conditions at the thermostat                       |
-| `outdoor_temp_f`, `wind_speed_kmh`          | Outdoor weather                                           |
-| `heat_stage_1_sec`, `cool_stage_1_sec`      | Seconds the stage ran during the 5-minute interval        |
-| `fan_sec`                                   | Seconds the fan ran during the interval                   |
-| `thermostat_temp_f`, `thermostat_motion`, … | Thermostat sensor readings (humidity, VOC, CO₂, pressure) |
-| `family_room_temp_f`, `bedroom_temp_f`, …   | Remote room sensor temperatures, °F                       |
+| Column                                                | Meaning                                                     |
+| ----------------------------------------------------- | ----------------------------------------------------------- |
+| `timestamp`                                           | Reading time, `YYYY-MM-DD HH:MM:SS`                         |
+| `system_setting`, `system_mode`                       | Thermostat setting (e.g. `heat`) and current mode           |
+| `program_mode`                                        | Schedule state: `Home`, `Sleep`, `Away`                     |
+| `heat_setpoint_f`, `cool_setpoint_f`                  | Setpoints, °F                                               |
+| `indoor_temp_f`, `indoor_humidity_pct`                | Indoor conditions at the thermostat                         |
+| `outdoor_temp_f`, `wind_speed_kmh`                    | Outdoor weather                                             |
+| `heat_stage_1_sec`, `cool_stage_1_sec`                | Seconds the stage ran during the 5-minute interval          |
+| `fan_sec`                                             | Seconds the fan ran during the interval                     |
+| `thermostat_temp_f`, `thermostat_humidity_pct`        | Thermostat sensor temperature and humidity                  |
+| `air_quality`, `voc_ppm`, `co2_ppm`, …                | Optional air-quality readings, when the thermostat has them |
+| `remote_sensor_1_temp_f`, `remote_sensor_2_temp_f`, … | Remote room sensor temperatures, °F                         |
 
 To add a house, create `data/thermostat/house_<id>/` and drop its CSVs in. The
 large-file check in the pre-commit hooks is turned off for `data/`, so files of
