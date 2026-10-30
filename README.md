@@ -13,6 +13,11 @@ the Typst engine that makes the PDFs. Nothing uses a Python, Quarto, or LaTeX
 installed elsewhere on your computer. The PDF font, TeX Gyre Termes, is
 committed under `fonts/`.
 
+## Citing this work
+
+If you want to cite this repository or the dataset, please cite this preprint:
+<https://arxiv.org/abs/2609.07619>.
+
 ## Setup
 
 You only do this once. Pick your operating system, open a terminal, and paste
